@@ -5,6 +5,7 @@ import (
 	_ "github.com/aws/aws-sdk-go/service/dynamodb"
 	_ "users-backup-aws-lambda/internal/aws"
 	"users-backup-aws-lambda/internal/processor"
+	"users-backup-aws-lambda/internal/secret"
 	"users-backup-aws-lambda/pkg/handler"
 )
 
@@ -24,8 +25,9 @@ func SetupApp() *application {
 	var (
 		// awsSess        = aws.NewSession()
 		// db             = dynamodb.New(awsSess)
+		dbSecret       = secret.NewSecret()
 		processorDummy = processor.NewProcessorDummy()
-		lambdaHandler  = handler.NewLambdaHandler(processorDummy)
+		lambdaHandler  = handler.NewLambdaHandler(processorDummy, dbSecret)
 	)
 
 	return &application{
