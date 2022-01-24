@@ -26,8 +26,8 @@ func SetupApp() *application {
 		// awsSess        = aws.NewSession()
 		// db             = dynamodb.New(awsSess)
 		dbSecret       = secret.NewSecret()
-		processorDummy = processor.NewProcessorDummy()
-		lambdaHandler  = handler.NewLambdaHandler(processorDummy, dbSecret)
+		processorDummy = processor.NewProcessorDummy(dbSecret)
+		lambdaHandler  = handler.NewLambdaHandler(processorDummy)
 	)
 
 	return &application{
