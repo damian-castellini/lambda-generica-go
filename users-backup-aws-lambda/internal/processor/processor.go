@@ -67,8 +67,7 @@ func (p *processorDummy) Process(ctx context.Context, s3Event events.S3Event) (d
 		bodyString := fmt.Sprintf("%s", body)
 		var splitBody = strings.Split(bodyString, "\n")
 		for _, jsonBody := range splitBody {
-			fmt.Printf(jsonBody)
-			fmt.Printf("processing json %s", jsonBody)
+			fmt.Printf("\nprocessing json %s", jsonBody)
 			var metrics Metrics
 			err = json.Unmarshal([]byte(jsonBody), &metrics)
 			if err != nil {
