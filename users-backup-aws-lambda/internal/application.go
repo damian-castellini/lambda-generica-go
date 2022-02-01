@@ -28,8 +28,8 @@ func SetupApp() *application {
 		awsSess        = aws.NewSession()
 		svc            = s3.New(awsSess)
 		dbSecret       = secret.NewSecret()
-		processorDummy = processor.NewProcessorDummy(dbSecret, svc)
-		lambdaHandler  = handler.NewLambdaHandler(processorDummy)
+		processor = processor.NewProcessor(dbSecret, svc)
+		lambdaHandler  = handler.NewLambdaHandler(processor)
 	)
 
 	return &application{

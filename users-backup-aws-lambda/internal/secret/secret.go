@@ -3,10 +3,15 @@ package secret
 import (
 	"encoding/base64"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+)
+
+const (
+	SECRET_NAME string = "secretTest"
 )
 
 type (
@@ -18,15 +23,14 @@ func NewSecret() *dbSecret {
 }
 
 func (*dbSecret) GetDBSecret() string {
-	sess, err := session.NewSession()
+	sessionCreated, err := session.NewSession()
 	if err != nil {
-		// Handle session creation error
 		fmt.Println(err.Error())
-		return "err"
+		return "Error creating session on GetDBSecret"
 	}
-	svc := secretsmanager.New(sess)
+	svc := secretsmanager.New(sessionCreated)
 	input := &secretsmanager.GetSecretValueInput{
-		SecretId: aws.String("secretTest"),
+		SecretId: aws.String("SECRET_NAME"),
 	}
 	fmt.Println(input)
 	result, err := svc.GetSecretValue(input)
