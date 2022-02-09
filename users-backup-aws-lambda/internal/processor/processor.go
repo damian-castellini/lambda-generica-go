@@ -38,14 +38,31 @@ type Metrics struct {
 	UnsubscribeURL string
 }
 
+type Secret struct {
+	User     string `json:"user"`
+	Password string `json:"password"`
+	Ip       string `json:"ip"`
+	Port     string `json:"port"`
+	Db       string `json:"db"`
+	Server   string `json:"server"`
+}
+
 func NewProcessor(s secretInterface, s3 svcInterface) *processor {
 	return &processor{dbSecret: s, svc: s3}
 }
 
 func (p *processor) Process(ctx context.Context, s3Event events.S3Event) (dto.Output, error) {
 	var finalMetrics []Metrics
-	var resp = p.dbSecret.GetDBSecret()
-	fmt.Println(resp)
+	var secret Secret
+	resp := p.dbSecret.GetDBSecret()
+	errorParsingSecret := json.Unmarshal([]byte(resp), &secret)
+
+	if errorParsingSecret != nil {
+		fmt.Println(errorParsingSecret)
+	} else {
+		fmt.Println(secret.Db, secret.Ip)
+	}
+
 	for _, record := range s3Event.Records {
 		var bucketName = record.S3.Bucket.Name
 		var fileKey = record.S3.Object.Key

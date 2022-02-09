@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	SECRET_NAME string = "secretTest"
+	SECRET_NAME string = "prod/mirror_uala"
 )
 
 type (
@@ -26,11 +26,11 @@ func (*dbSecret) GetDBSecret() string {
 	sessionCreated, err := session.NewSession()
 	if err != nil {
 		fmt.Println(err.Error())
-		return "Error creating session on GetDBSecret"
+		return "Error creating session on GetDBSecret: " + err.Error()
 	}
 	svc := secretsmanager.New(sessionCreated)
 	input := &secretsmanager.GetSecretValueInput{
-		SecretId: aws.String("SECRET_NAME"),
+		SecretId: aws.String(SECRET_NAME),
 	}
 	fmt.Println(input)
 	result, err := svc.GetSecretValue(input)
@@ -51,7 +51,7 @@ func (*dbSecret) GetDBSecret() string {
 			// Message from an error.
 			fmt.Println(err.Error())
 		}
-		return "err"
+		return "Error getting secret value on GetSecretValue: " + err.Error()
 	}
 
 	if result.SecretString != nil {
@@ -61,7 +61,7 @@ func (*dbSecret) GetDBSecret() string {
 		len, err := base64.StdEncoding.Decode(decodedBinarySecretBytes, result.SecretBinary)
 		if err != nil {
 			fmt.Println("Base64 Decode Error:", err)
-			return "err"
+			return "Error encoding secret value: " + err.Error()
 		}
 		return string(decodedBinarySecretBytes[:len])
 	}

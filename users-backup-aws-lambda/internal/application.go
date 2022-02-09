@@ -25,11 +25,11 @@ func SetupApp() *application {
 
 	// Initialize local clients, processor and lambda handler
 	var (
-		awsSess        = aws.NewSession()
-		svc            = s3.New(awsSess)
-		dbSecret       = secret.NewSecret()
-		processor = processor.NewProcessor(dbSecret, svc)
-		lambdaHandler  = handler.NewLambdaHandler(processor)
+		awsSess       = aws.NewSession()
+		svc           = s3.New(awsSess)
+		dbSecret      = secret.NewSecret()
+		processor     = processor.NewProcessor(dbSecret, svc)
+		lambdaHandler = handler.NewLambdaHandler(processor)
 	)
 
 	return &application{
