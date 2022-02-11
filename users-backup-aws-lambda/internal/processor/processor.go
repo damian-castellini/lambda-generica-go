@@ -22,9 +22,14 @@ type (
 		GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput, error)
 	}
 
+	databaseInterface interface {
+		Open(connectionString string)
+	}
+
 	processor struct {
-		dbSecret secretInterface
-		svc      svcInterface
+		dbSecret     secretInterface
+		svc          svcInterface
+		dbConnection databaseInterface
 	}
 )
 
@@ -38,30 +43,14 @@ type Metrics struct {
 	UnsubscribeURL string
 }
 
-type Secret struct {
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Ip       string `json:"ip"`
-	Port     string `json:"port"`
-	Db       string `json:"db"`
-	Server   string `json:"server"`
-}
-
-func NewProcessor(s secretInterface, s3 svcInterface) *processor {
-	return &processor{dbSecret: s, svc: s3}
+func NewProcessor(s secretInterface, s3 svcInterface, db databaseInterface) *processor {
+	return &processor{dbSecret: s, svc: s3, dbConnection: db}
 }
 
 func (p *processor) Process(ctx context.Context, s3Event events.S3Event) (dto.Output, error) {
 	var finalMetrics []Metrics
-	var secret Secret
 	resp := p.dbSecret.GetDBSecret()
-	errorParsingSecret := json.Unmarshal([]byte(resp), &secret)
-
-	if errorParsingSecret != nil {
-		fmt.Println(errorParsingSecret)
-	} else {
-		fmt.Println(secret.Db, secret.Ip)
-	}
+	p.dbConnection.Open(resp)
 
 	for _, record := range s3Event.Records {
 		var bucketName = record.S3.Bucket.Name
