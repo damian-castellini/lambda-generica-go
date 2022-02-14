@@ -15,7 +15,7 @@ import (
 
 var db *sql.DB
 
-const NOT_PROCESSED string = "NOT PROCESSED"
+const NOT_PROCESSED string = "NOT_PROCESSED"
 
 type Secret struct {
 	User     string `json:"user"`
@@ -97,15 +97,13 @@ func (*databaseConnection) MigrateUser(userToInsert string) (int64, error) {
 	}
 	defer stmt.Close()
 
-	row := stmt.QueryRowContext(
+	_, err = stmt.ExecContext(
 		ctx,
 		sql.Named("Message", userToInsert),
 		sql.Named("Status", NOT_PROCESSED))
-	var newID int64
-	err = row.Scan(&newID)
 	if err != nil {
 		return -1, err
 	}
 
-	return newID, nil
+	return 1, nil
 }
