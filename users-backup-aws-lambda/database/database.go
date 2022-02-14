@@ -57,7 +57,8 @@ func (*databaseConnection) Open(connectionString string) {
 		Host:     fmt.Sprintf("%s:%d", secret.Ip, portInteger),
 		RawQuery: query.Encode(),
 	}
-	db, errorConnection := sql.Open("sqlserver", u.String())
+	var errorConnection error
+	db, errorConnection = sql.Open("sqlserver", u.String())
 
 	if errorConnection != nil {
 		fmt.Println(errorConnection)
@@ -70,7 +71,7 @@ func (*databaseConnection) Open(connectionString string) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	fmt.Printf("Connected!\n")
+	fmt.Printf("Connected to SQL Server Database - ABC\n")
 }
 
 func (*databaseConnection) MigrateUser(userToInsert string) (int64, error) {
