@@ -15,6 +15,8 @@ import (
 
 var db *sql.DB
 
+const NOT_PROCESSED string = "NOT PROCESSED"
+
 type Secret struct {
 	User     string `json:"user"`
 	Password string `json:"password"`
@@ -44,19 +46,15 @@ func (*databaseConnection) Open(connectionString string) {
 		fmt.Println(secret.Db, secret.Ip)
 	}
 
-	// connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
-	//	secret.Ip, secret.User, secret.Password, secret.Port, secret.Db)
-
-	port, _ := strconv.Atoi(secret.Port)
+	portInteger, _ := strconv.Atoi(secret.Port)
 
 	query := url.Values{}
 	query.Add("app name", "MyAppName")
 
 	u := &url.URL{
-		Scheme: "sqlserver",
-		User:   url.UserPassword(secret.User, secret.Password),
-		Host:   fmt.Sprintf("%s:%d", secret.Ip, port),
-		// Path:  instance, // if connecting to an instance instead of a port
+		Scheme:   "sqlserver",
+		User:     url.UserPassword(secret.User, secret.Password),
+		Host:     fmt.Sprintf("%s:%d", secret.Ip, portInteger),
 		RawQuery: query.Encode(),
 	}
 	db, errorConnection := sql.Open("sqlserver", u.String())
@@ -67,11 +65,6 @@ func (*databaseConnection) Open(connectionString string) {
 
 	var err error
 
-	// Create connection pool
-	// db, err = sql.Open("sqlserver", connString)
-	// if err != nil {
-	//		log.Fatal("Error creating connection pool: ", err.Error())
-	//	}
 	ctx := context.Background()
 	err = db.PingContext(ctx)
 	if err != nil {
@@ -80,12 +73,12 @@ func (*databaseConnection) Open(connectionString string) {
 	fmt.Printf("Connected!\n")
 }
 
-func CreateEmployee(name string, location string) (int64, error) {
+func (*databaseConnection) MigrateUser(userToInsert string) (int64, error) {
 	ctx := context.Background()
 	var err error
 
 	if db == nil {
-		err = errors.New("CreateEmployee: db is null")
+		err = errors.New("MigrateUser: db is null")
 		return -1, err
 	}
 
@@ -95,10 +88,9 @@ func CreateEmployee(name string, location string) (int64, error) {
 		return -1, err
 	}
 
-	tsql := `INSERT INTO TestSchema.Employees (Name, Location) VALUES (@Name, @Location);
-      select isNull(SCOPE_IDENTITY(), -1);`
+	sqlSentence := `INSERT INTO user_msg (message, status) VALUES (@Message, @Status );`
 
-	stmt, err := db.Prepare(tsql)
+	stmt, err := db.Prepare(sqlSentence)
 	if err != nil {
 		return -1, err
 	}
@@ -106,8 +98,8 @@ func CreateEmployee(name string, location string) (int64, error) {
 
 	row := stmt.QueryRowContext(
 		ctx,
-		sql.Named("Name", name),
-		sql.Named("Location", location))
+		sql.Named("Message", userToInsert),
+		sql.Named("Status", NOT_PROCESSED))
 	var newID int64
 	err = row.Scan(&newID)
 	if err != nil {

@@ -24,6 +24,7 @@ type (
 
 	databaseInterface interface {
 		Open(connectionString string)
+		MigrateUser(userToInsert string) (int64, error)
 	}
 
 	processor struct {
@@ -81,6 +82,12 @@ func (p *processor) Process(ctx context.Context, s3Event events.S3Event) (dto.Ou
 				fmt.Print(err)
 			} else {
 				fmt.Printf(metrics.Message)
+				idInsertado, err := p.dbConnection.MigrateUser(metrics.Message)
+				if idInsertado == -1 {
+					fmt.Println("Error to insert user: ", err)
+				} else {
+					fmt.Println("User transfered sucessful")
+				}
 				finalMetrics = append(finalMetrics, metrics)
 			}
 		}
