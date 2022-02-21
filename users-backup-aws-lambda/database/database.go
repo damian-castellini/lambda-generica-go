@@ -31,8 +31,6 @@ func (d *databaseConnection) getParamsConnection(connectionString string) *url.U
 
 	if errorParsingSecret != nil {
 		fmt.Println(errorParsingSecret)
-	} else {
-		fmt.Println(secret.Db, secret.Ip)
 	}
 
 	portInteger, _ := strconv.Atoi(secret.Port)

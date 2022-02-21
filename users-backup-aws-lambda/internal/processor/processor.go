@@ -34,22 +34,12 @@ type (
 	}
 )
 
-type Metrics struct {
-	Type           string
-	MessageId      string
-	TopicArn       string
-	Subject        string
-	Message        string
-	Timestamp      string
-	UnsubscribeURL string
-}
-
 func NewProcessor(s secretInterface, s3 svcInterface, db databaseInterface) *processor {
 	return &processor{dbSecret: s, svc: s3, dbConnection: db}
 }
 
 func (p *processor) Process(ctx context.Context, s3Event events.S3Event) (dto.Output, error) {
-	var finalMetrics []Metrics
+	var finalMetrics []dto.Metrics
 	resp := p.dbSecret.GetDBSecret()
 	p.dbConnection.Open(resp)
 
@@ -76,17 +66,17 @@ func (p *processor) Process(ctx context.Context, s3Event events.S3Event) (dto.Ou
 		var splitBody = strings.Split(bodyString, "\n")
 		for _, jsonBody := range splitBody {
 			fmt.Printf("\nprocessing json %s", jsonBody)
-			var metrics Metrics
+			var metrics dto.Metrics
 			err = json.Unmarshal([]byte(jsonBody), &metrics)
 			if err != nil {
 				fmt.Print(err)
 			} else {
 				fmt.Printf(metrics.Message)
-				idInsertado, err := p.dbConnection.MigrateUser(metrics.Message)
-				if idInsertado == -1 {
-					fmt.Println("Error to insert user: ", err)
+				insertedId, err := p.dbConnection.MigrateUser(metrics.Message)
+				if insertedId == -1 {
+					fmt.Println(dto.ERROR_INSERT, err)
 				} else {
-					fmt.Println("User transfered sucessful")
+					fmt.Println(dto.INSERT_SUCCESSFUL)
 				}
 				finalMetrics = append(finalMetrics, metrics)
 			}
@@ -94,6 +84,6 @@ func (p *processor) Process(ctx context.Context, s3Event events.S3Event) (dto.Ou
 
 	}
 	return dto.Output{
-		Mensaje: "USER TRANSFERENCE",
+		Message: dto.STARTING_PROCESS,
 	}, nil
 }

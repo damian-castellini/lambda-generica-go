@@ -8,10 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-)
-
-const (
-	SECRET_NAME string = "prod/mirror_uala"
+	"users-backup-aws-lambda/pkg/dto"
 )
 
 type (
@@ -30,7 +27,7 @@ func (*dbSecret) GetDBSecret() string {
 	}
 	svc := secretsmanager.New(sessionCreated)
 	input := &secretsmanager.GetSecretValueInput{
-		SecretId: aws.String(SECRET_NAME),
+		SecretId: aws.String(dto.SECRET_NAME),
 	}
 	fmt.Println(input)
 	result, err := svc.GetSecretValue(input)
