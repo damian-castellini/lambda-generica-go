@@ -11,20 +11,10 @@ import (
 	"strconv"
 
 	_ "github.com/denisenkom/go-mssqldb"
+	"users-backup-aws-lambda/pkg/dto"
 )
 
 var db *sql.DB
-
-const NOT_PROCESSED string = "NOT_PROCESSED"
-
-type Secret struct {
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Ip       string `json:"ip"`
-	Port     string `json:"port"`
-	Db       string `json:"db"`
-	Server   string `json:"server"`
-}
 
 type (
 	databaseConnection struct{}
@@ -34,10 +24,9 @@ func NewDatabaseConnection() *databaseConnection {
 	return &databaseConnection{}
 }
 
-func (*databaseConnection) Open(connectionString string) {
+func (d *databaseConnection) getParamsConnection(connectionString string) *url.URL {
 
-	var secret Secret
-
+	var secret dto.Secret
 	errorParsingSecret := json.Unmarshal([]byte(connectionString), &secret)
 
 	if errorParsingSecret != nil {
@@ -49,16 +38,21 @@ func (*databaseConnection) Open(connectionString string) {
 	portInteger, _ := strconv.Atoi(secret.Port)
 
 	query := url.Values{}
-	query.Add("app name", "MyAppName")
 
-	u := &url.URL{
+	return &url.URL{
 		Scheme:   "sqlserver",
 		User:     url.UserPassword(secret.User, secret.Password),
 		Host:     fmt.Sprintf("%s:%d", secret.Ip, portInteger),
 		RawQuery: query.Encode(),
 	}
+
+}
+
+func (d *databaseConnection) Open(connectionString string) {
+
 	var errorConnection error
-	db, errorConnection = sql.Open("sqlserver", u.String())
+	paramsConnection := d.getParamsConnection(connectionString)
+	db, errorConnection = sql.Open("sqlserver", paramsConnection.String())
 
 	if errorConnection != nil {
 		fmt.Println(errorConnection)
@@ -71,7 +65,7 @@ func (*databaseConnection) Open(connectionString string) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	fmt.Printf("Connected to SQL Server Database - ABC\n")
+	fmt.Printf(dto.CONNECTION_SUCCESFUL)
 }
 
 func (*databaseConnection) MigrateUser(userToInsert string) (int64, error) {
@@ -79,7 +73,7 @@ func (*databaseConnection) MigrateUser(userToInsert string) (int64, error) {
 	var err error
 
 	if db == nil {
-		err = errors.New("MigrateUser: db is null")
+		err = errors.New(dto.USER_NULL)
 		return -1, err
 	}
 
@@ -89,7 +83,7 @@ func (*databaseConnection) MigrateUser(userToInsert string) (int64, error) {
 		return -1, err
 	}
 
-	sqlSentence := `INSERT INTO user_msg (message, status) VALUES (@Message, @Status );`
+	sqlSentence := dto.INSERT_SENTENCE
 
 	stmt, err := db.Prepare(sqlSentence)
 	if err != nil {
@@ -100,7 +94,7 @@ func (*databaseConnection) MigrateUser(userToInsert string) (int64, error) {
 	_, err = stmt.ExecContext(
 		ctx,
 		sql.Named("Message", userToInsert),
-		sql.Named("Status", NOT_PROCESSED))
+		sql.Named("Status", dto.REGISTRY_NOT_PROCESSED))
 	if err != nil {
 		return -1, err
 	}
