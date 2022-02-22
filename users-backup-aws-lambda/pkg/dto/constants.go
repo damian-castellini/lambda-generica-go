@@ -9,4 +9,6 @@ var (
 	INSERT_SUCCESSFUL      = "User inserted successfully."
 	STARTING_PROCESS       = "Beginning to migrate"
 	SECRET_NAME            = "prod/mirror_uala"
+	SQL_ENGINE             = "sqlserver"
+	DYNAMO_TABLE           = "example"
 )

@@ -1,4 +1,4 @@
-package database
+package storage
 
 import (
 	"context"
@@ -50,7 +50,7 @@ func (d *databaseConnection) Open(connectionString string) {
 
 	var errorConnection error
 	paramsConnection := d.getParamsConnection(connectionString)
-	db, errorConnection = sql.Open("sqlserver", paramsConnection.String())
+	db, errorConnection = sql.Open(dto.SQL_ENGINE, paramsConnection.String())
 
 	if errorConnection != nil {
 		fmt.Println(errorConnection)
@@ -75,7 +75,7 @@ func (*databaseConnection) MigrateUser(userToInsert string) (int64, error) {
 		return -1, err
 	}
 
-	// Check if database is alive.
+	// Check if storage is alive.
 	err = db.PingContext(ctx)
 	if err != nil {
 		return -1, err
